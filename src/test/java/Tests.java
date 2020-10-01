@@ -19,19 +19,13 @@ public class Tests {
                 .log().body()
                 .extract().response();
 
-
         List<String> referencesList = response.jsonPath().getList("data.avatar", String.class);
-        Optional<String> expectedNameOptional = referencesList.stream()
-                .map(reference -> reference.split("/"))
-                .map(stringArray -> stringArray[stringArray.length - 1]).findFirst();
+        Optional<String> expectedNameOptional = TestUtils.getAvatarFileNameStream(referencesList).findFirst();
 
         Assert.assertTrue(expectedNameOptional.isPresent());
         String expectedFileName = expectedNameOptional.get();
 
-
-        referencesList.stream()
-                .map(reference -> reference.split("/"))
-                .map(stringArray -> stringArray[stringArray.length - 1])
+        TestUtils.getAvatarFileNameStream(referencesList)
                 .forEach(resultFileName -> Assert.assertEquals(
                         resultFileName,
                         expectedFileName,
