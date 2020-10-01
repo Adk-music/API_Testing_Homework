@@ -1,6 +1,6 @@
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.testng.Assert;
+import org.assertj.core.api.Assertions;
 import org.testng.annotations.Test;
 
 import java.util.*;
@@ -22,15 +22,10 @@ public class Tests {
         List<String> referencesList = response.jsonPath().getList("data.avatar", String.class);
         Optional<String> expectedNameOptional = TestUtils.getAvatarFileNameStream(referencesList).findFirst();
 
-        Assert.assertTrue(expectedNameOptional.isPresent());
+        Assertions.assertThat(expectedNameOptional).isPresent();
         String expectedFileName = expectedNameOptional.get();
 
-        TestUtils.getAvatarFileNameStream(referencesList)
-                .forEach(resultFileName -> Assert.assertEquals(
-                        resultFileName,
-                        expectedFileName,
-                        "Имя файла аватара отличается от ожидаемого"));
-
+        Assertions.assertThat(TestUtils.getAvatarFileNameStream(referencesList)).contains(expectedFileName);
     }
 
     @Test
@@ -44,32 +39,32 @@ public class Tests {
 
         Response response = given()
                 .body(data)
-                .contentType("application/json")
                 .when()
                 .post("/api/register")
                 .then()
                 .log().body()
                 .extract().response();
         JsonPath jsonPath = response.jsonPath();
-        Assert.assertEquals(jsonPath.getString("id"), data.get("id"));
-        Assert.assertEquals(jsonPath.getString("token"), data.get("token"));
 
+        Assertions.assertThat(jsonPath.getString("id")).isEqualTo(data.get("id"));
+        Assertions.assertThat(jsonPath.getString("token")).isEqualTo(data.get("token"));
     }
 
     @Test
     public void registerUnsuccessful() {
         Specifications.initialSpec(Specifications.requestSpecification(),Specifications.responseStatusBadRequest());
-        String email = "sydney@fife";
-        String message = "Missing email or username";
+        Map<String, String> data = new HashMap<>();
+        data.put("email", "sydney@fife");
+        String message = "Missing password";
         Response response = given()
-                .body(email)
+                .body(data)
                 .when()
                 .post("/api/register")
                 .then()
                 .log().body()
                 .extract().response();
         JsonPath jsonPath = response.jsonPath();
-        Assert.assertEquals(jsonPath.getString("error"), message);
+        Assertions.assertThat(jsonPath.getString("error")).isEqualTo(message);
     }
 
 
@@ -84,10 +79,7 @@ public class Tests {
                 .extract().response();
 
         List<String> referencesList = response.jsonPath().getList("data.year", String.class);
-        List<String> myList = new ArrayList<>(referencesList);
-        Collections.sort(myList);
-
-        Assert.assertEquals(myList,referencesList);
+        Assertions.assertThat(referencesList).isSorted();
     }
 
 }
